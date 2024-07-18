@@ -62,5 +62,4 @@ func createShareCode(dbClent *ent.Client) (string, error) {
 	}
 
 	return shareCode, nil
-
 }
