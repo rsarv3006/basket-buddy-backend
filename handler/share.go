@@ -7,6 +7,7 @@ import (
 	"basket-buddy-backend/helpers"
 	"context"
 	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,11 +19,11 @@ func CreateShareEndpoint(dbClient *ent.Client) fiber.Handler {
 		shareCreateDto := new(dto.CreateShareDto)
 
 		if err := c.BodyParser(shareCreateDto); err != nil {
-			sendBadRequestResponse(c, err, "Failed to parse share data")
+			return sendBadRequestResponse(c, err, "Failed to parse share data")
 		}
 
 		if shareCreateDto.Data == nil {
-			sendBadRequestResponse(c, nil, "share data not defined")
+			return sendBadRequestResponse(c, nil, "share data not defined")
 		}
 
 		shareCode, err := createShareCode(dbClient)
@@ -41,7 +42,7 @@ func CreateShareEndpoint(dbClient *ent.Client) fiber.Handler {
 			return sendInternalServerErrorResponse(c, err)
 		}
 
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 			"message":   "Share created successfully",
 			"shareCode": shareObj.ShareCode,
 		})
@@ -62,4 +63,35 @@ func createShareCode(dbClent *ent.Client) (string, error) {
 	}
 
 	return shareCode, nil
+}
+
+func FetchShareEndpoint(dbClient *ent.Client) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		shareCode := c.Params("ShareCode")
+
+		if shareCode == "" {
+			return sendBadRequestResponse(c, nil, "Share code not defined")
+		}
+
+		shareObj, err := dbClient.Share.Query().Where(share.ShareCode(shareCode)).First(context.Background())
+
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return sendNotFoundResponse(c, err)
+			}
+			return sendInternalServerErrorResponse(c, err)
+		}
+
+		if shareObj.Expiration.Before(time.Now()) {
+			// TODO: convert to soft delete and update status to expired
+			dbClient.Share.DeleteOne(shareObj).Exec(context.Background())
+			return sendNotFoundResponse(c, nil)
+		}
+
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"message":   "Share fetched successfully",
+			"shareCode": shareObj.ShareCode,
+			"data":      shareObj.Data,
+		})
+	}
 }

@@ -56,7 +56,7 @@ func (sc *ShareCreate) SetShareCode(s string) *ShareCreate {
 }
 
 // SetData sets the "data" field.
-func (sc *ShareCreate) SetData(m map[string]interface{}) *ShareCreate {
+func (sc *ShareCreate) SetData(m []map[string]interface{}) *ShareCreate {
 	sc.mutation.SetData(m)
 	return sc
 }

@@ -27,6 +27,17 @@ func sendInternalServerErrorResponse(c *fiber.Ctx, err error) error {
 	})
 }
 
+func sendNotFoundResponse(c *fiber.Ctx, err error) error {
+	if err != nil {
+		log.Println(err)
+	}
+
+	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		"message": "Not Found",
+		"error":   err,
+	})
+}
+
 func HealthEndpoint() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{

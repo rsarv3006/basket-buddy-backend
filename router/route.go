@@ -22,8 +22,5 @@ func setUpShareRoutes(api fiber.Router, dbClient *ent.Client) {
 	config.Use(middleware.IsExpired())
 
 	config.Post("/", handler.CreateShareEndpoint(dbClient))
-
-	// config.Get("/:AppName", handler.FetchConfigEndpoint(dbClient))
-	// config.Post("/:AppName", handler.CreateConfigEndpoint(dbClient))
-	// config.Post("/:AppName/activate/:Version", handler.ActivateConfigEndpoint(dbClient))
+	config.Get("/:ShareCode", handler.FetchShareEndpoint(dbClient))
 }

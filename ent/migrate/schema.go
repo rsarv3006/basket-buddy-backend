@@ -30,7 +30,7 @@ var (
 		{Name: "expiration", Type: field.TypeTime},
 		{Name: "share_code", Type: field.TypeString, Unique: true},
 		{Name: "data", Type: field.TypeJSON},
-		{Name: "creator_id", Type: field.TypeUUID, Unique: true},
+		{Name: "creator_id", Type: field.TypeUUID},
 	}
 	// SharesTable holds the schema information for the "shares" table.
 	SharesTable = &schema.Table{

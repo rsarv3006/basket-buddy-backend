@@ -12,6 +12,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 )
@@ -72,8 +73,14 @@ func (su *ShareUpdate) SetNillableShareCode(s *string) *ShareUpdate {
 }
 
 // SetData sets the "data" field.
-func (su *ShareUpdate) SetData(m map[string]interface{}) *ShareUpdate {
+func (su *ShareUpdate) SetData(m []map[string]interface{}) *ShareUpdate {
 	su.mutation.SetData(m)
+	return su
+}
+
+// AppendData appends m to the "data" field.
+func (su *ShareUpdate) AppendData(m []map[string]interface{}) *ShareUpdate {
+	su.mutation.AppendData(m)
 	return su
 }
 
@@ -144,6 +151,11 @@ func (su *ShareUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := su.mutation.Data(); ok {
 		_spec.SetField(share.FieldData, field.TypeJSON, value)
 	}
+	if value, ok := su.mutation.AppendedData(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, share.FieldData, value)
+		})
+	}
 	if value, ok := su.mutation.CreatorID(); ok {
 		_spec.SetField(share.FieldCreatorID, field.TypeUUID, value)
 	}
@@ -210,8 +222,14 @@ func (suo *ShareUpdateOne) SetNillableShareCode(s *string) *ShareUpdateOne {
 }
 
 // SetData sets the "data" field.
-func (suo *ShareUpdateOne) SetData(m map[string]interface{}) *ShareUpdateOne {
+func (suo *ShareUpdateOne) SetData(m []map[string]interface{}) *ShareUpdateOne {
 	suo.mutation.SetData(m)
+	return suo
+}
+
+// AppendData appends m to the "data" field.
+func (suo *ShareUpdateOne) AppendData(m []map[string]interface{}) *ShareUpdateOne {
+	suo.mutation.AppendData(m)
 	return suo
 }
 
@@ -311,6 +329,11 @@ func (suo *ShareUpdateOne) sqlSave(ctx context.Context) (_node *Share, err error
 	}
 	if value, ok := suo.mutation.Data(); ok {
 		_spec.SetField(share.FieldData, field.TypeJSON, value)
+	}
+	if value, ok := suo.mutation.AppendedData(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, share.FieldData, value)
+		})
 	}
 	if value, ok := suo.mutation.CreatorID(); ok {
 		_spec.SetField(share.FieldCreatorID, field.TypeUUID, value)

@@ -587,7 +587,8 @@ type ShareMutation struct {
 	created_at    *time.Time
 	expiration    *time.Time
 	share_code    *string
-	data          *map[string]interface{}
+	data          *[]map[string]interface{}
+	appenddata    []map[string]interface{}
 	creator_id    *uuid.UUID
 	clearedFields map[string]struct{}
 	done          bool
@@ -808,12 +809,13 @@ func (m *ShareMutation) ResetShareCode() {
 }
 
 // SetData sets the "data" field.
-func (m *ShareMutation) SetData(value map[string]interface{}) {
+func (m *ShareMutation) SetData(value []map[string]interface{}) {
 	m.data = &value
+	m.appenddata = nil
 }
 
 // Data returns the value of the "data" field in the mutation.
-func (m *ShareMutation) Data() (r map[string]interface{}, exists bool) {
+func (m *ShareMutation) Data() (r []map[string]interface{}, exists bool) {
 	v := m.data
 	if v == nil {
 		return
@@ -824,7 +826,7 @@ func (m *ShareMutation) Data() (r map[string]interface{}, exists bool) {
 // OldData returns the old "data" field's value of the Share entity.
 // If the Share object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ShareMutation) OldData(ctx context.Context) (v map[string]interface{}, err error) {
+func (m *ShareMutation) OldData(ctx context.Context) (v []map[string]interface{}, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldData is only allowed on UpdateOne operations")
 	}
@@ -838,9 +840,23 @@ func (m *ShareMutation) OldData(ctx context.Context) (v map[string]interface{}, 
 	return oldValue.Data, nil
 }
 
+// AppendData adds value to the "data" field.
+func (m *ShareMutation) AppendData(value []map[string]interface{}) {
+	m.appenddata = append(m.appenddata, value...)
+}
+
+// AppendedData returns the list of values that were appended to the "data" field in this mutation.
+func (m *ShareMutation) AppendedData() ([]map[string]interface{}, bool) {
+	if len(m.appenddata) == 0 {
+		return nil, false
+	}
+	return m.appenddata, true
+}
+
 // ResetData resets all changes to the "data" field.
 func (m *ShareMutation) ResetData() {
 	m.data = nil
+	m.appenddata = nil
 }
 
 // SetCreatorID sets the "creator_id" field.
@@ -997,7 +1013,7 @@ func (m *ShareMutation) SetField(name string, value ent.Value) error {
 		m.SetShareCode(v)
 		return nil
 	case share.FieldData:
-		v, ok := value.(map[string]interface{})
+		v, ok := value.([]map[string]interface{})
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

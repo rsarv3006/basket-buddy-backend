@@ -26,7 +26,7 @@ type Share struct {
 	// ShareCode holds the value of the "share_code" field.
 	ShareCode string `json:"share_code,omitempty"`
 	// Data holds the value of the "data" field.
-	Data map[string]interface{} `json:"data,omitempty"`
+	Data []map[string]interface{} `json:"data,omitempty"`
 	// CreatorID holds the value of the "creator_id" field.
 	CreatorID    uuid.UUID `json:"creator_id,omitempty"`
 	selectValues sql.SelectValues
