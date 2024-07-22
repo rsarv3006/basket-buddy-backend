@@ -31,6 +31,7 @@ var (
 		{Name: "share_code", Type: field.TypeString, Unique: true},
 		{Name: "data", Type: field.TypeJSON},
 		{Name: "creator_id", Type: field.TypeUUID},
+		{Name: "status", Type: field.TypeString, Default: "created"},
 	}
 	// SharesTable holds the schema information for the "shares" table.
 	SharesTable = &schema.Table{

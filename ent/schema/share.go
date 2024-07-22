@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"basket-buddy-backend/model"
 	"time"
 
 	"entgo.io/ent"
@@ -26,6 +27,8 @@ func (Share) Fields() []ent.Field {
 			Unique(),
 		field.JSON("data", []map[string]interface{}(nil)),
 		field.UUID("creator_id", uuid.UUID{}),
+		field.String("status").
+			Default(model.ShareStatusCreated),
 	}
 }
 

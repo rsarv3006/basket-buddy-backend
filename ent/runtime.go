@@ -93,6 +93,10 @@ func init() {
 	shareDescExpiration := shareFields[2].Descriptor()
 	// share.DefaultExpiration holds the default value on creation for the expiration field.
 	share.DefaultExpiration = shareDescExpiration.Default.(time.Time)
+	// shareDescStatus is the schema descriptor for status field.
+	shareDescStatus := shareFields[6].Descriptor()
+	// share.DefaultStatus holds the default value on creation for the status field.
+	share.DefaultStatus = shareDescStatus.Default.(string)
 	// shareDescID is the schema descriptor for id field.
 	shareDescID := shareFields[0].Descriptor()
 	// share.DefaultID holds the default value on creation for the id field.

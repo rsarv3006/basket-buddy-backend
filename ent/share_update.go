@@ -98,6 +98,20 @@ func (su *ShareUpdate) SetNillableCreatorID(u *uuid.UUID) *ShareUpdate {
 	return su
 }
 
+// SetStatus sets the "status" field.
+func (su *ShareUpdate) SetStatus(s string) *ShareUpdate {
+	su.mutation.SetStatus(s)
+	return su
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (su *ShareUpdate) SetNillableStatus(s *string) *ShareUpdate {
+	if s != nil {
+		su.SetStatus(*s)
+	}
+	return su
+}
+
 // Mutation returns the ShareMutation object of the builder.
 func (su *ShareUpdate) Mutation() *ShareMutation {
 	return su.mutation
@@ -158,6 +172,9 @@ func (su *ShareUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := su.mutation.CreatorID(); ok {
 		_spec.SetField(share.FieldCreatorID, field.TypeUUID, value)
+	}
+	if value, ok := su.mutation.Status(); ok {
+		_spec.SetField(share.FieldStatus, field.TypeString, value)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -243,6 +260,20 @@ func (suo *ShareUpdateOne) SetCreatorID(u uuid.UUID) *ShareUpdateOne {
 func (suo *ShareUpdateOne) SetNillableCreatorID(u *uuid.UUID) *ShareUpdateOne {
 	if u != nil {
 		suo.SetCreatorID(*u)
+	}
+	return suo
+}
+
+// SetStatus sets the "status" field.
+func (suo *ShareUpdateOne) SetStatus(s string) *ShareUpdateOne {
+	suo.mutation.SetStatus(s)
+	return suo
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (suo *ShareUpdateOne) SetNillableStatus(s *string) *ShareUpdateOne {
+	if s != nil {
+		suo.SetStatus(*s)
 	}
 	return suo
 }
@@ -337,6 +368,9 @@ func (suo *ShareUpdateOne) sqlSave(ctx context.Context) (_node *Share, err error
 	}
 	if value, ok := suo.mutation.CreatorID(); ok {
 		_spec.SetField(share.FieldCreatorID, field.TypeUUID, value)
+	}
+	if value, ok := suo.mutation.Status(); ok {
+		_spec.SetField(share.FieldStatus, field.TypeString, value)
 	}
 	_node = &Share{config: suo.config}
 	_spec.Assign = _node.assignValues

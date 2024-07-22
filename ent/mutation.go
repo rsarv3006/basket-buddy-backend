@@ -590,6 +590,7 @@ type ShareMutation struct {
 	data          *[]map[string]interface{}
 	appenddata    []map[string]interface{}
 	creator_id    *uuid.UUID
+	status        *string
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Share, error)
@@ -895,6 +896,42 @@ func (m *ShareMutation) ResetCreatorID() {
 	m.creator_id = nil
 }
 
+// SetStatus sets the "status" field.
+func (m *ShareMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ShareMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Share entity.
+// If the Share object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ShareMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ShareMutation) ResetStatus() {
+	m.status = nil
+}
+
 // Where appends a list predicates to the ShareMutation builder.
 func (m *ShareMutation) Where(ps ...predicate.Share) {
 	m.predicates = append(m.predicates, ps...)
@@ -929,7 +966,7 @@ func (m *ShareMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ShareMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.created_at != nil {
 		fields = append(fields, share.FieldCreatedAt)
 	}
@@ -944,6 +981,9 @@ func (m *ShareMutation) Fields() []string {
 	}
 	if m.creator_id != nil {
 		fields = append(fields, share.FieldCreatorID)
+	}
+	if m.status != nil {
+		fields = append(fields, share.FieldStatus)
 	}
 	return fields
 }
@@ -963,6 +1003,8 @@ func (m *ShareMutation) Field(name string) (ent.Value, bool) {
 		return m.Data()
 	case share.FieldCreatorID:
 		return m.CreatorID()
+	case share.FieldStatus:
+		return m.Status()
 	}
 	return nil, false
 }
@@ -982,6 +1024,8 @@ func (m *ShareMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldData(ctx)
 	case share.FieldCreatorID:
 		return m.OldCreatorID(ctx)
+	case share.FieldStatus:
+		return m.OldStatus(ctx)
 	}
 	return nil, fmt.Errorf("unknown Share field %s", name)
 }
@@ -1025,6 +1069,13 @@ func (m *ShareMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatorID(v)
+		return nil
+	case share.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Share field %s", name)
@@ -1089,6 +1140,9 @@ func (m *ShareMutation) ResetField(name string) error {
 		return nil
 	case share.FieldCreatorID:
 		m.ResetCreatorID()
+		return nil
+	case share.FieldStatus:
+		m.ResetStatus()
 		return nil
 	}
 	return fmt.Errorf("unknown Share field %s", name)

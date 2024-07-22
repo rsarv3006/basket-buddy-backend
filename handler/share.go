@@ -5,6 +5,7 @@ import (
 	"basket-buddy-backend/ent"
 	"basket-buddy-backend/ent/share"
 	"basket-buddy-backend/helpers"
+	"basket-buddy-backend/model"
 	"context"
 	"errors"
 	"time"
@@ -73,7 +74,12 @@ func FetchShareEndpoint(dbClient *ent.Client) fiber.Handler {
 			return sendBadRequestResponse(c, nil, "Share code not defined")
 		}
 
-		shareObj, err := dbClient.Share.Query().Where(share.ShareCode(shareCode)).First(context.Background())
+		shareObj, err := dbClient.Share.Query().Where(
+			share.And(
+				share.ShareCode(shareCode),
+				share.Status(model.ShareStatusCreated),
+			),
+		).First(context.Background())
 
 		if err != nil {
 			if ent.IsNotFound(err) {
@@ -83,9 +89,17 @@ func FetchShareEndpoint(dbClient *ent.Client) fiber.Handler {
 		}
 
 		if shareObj.Expiration.Before(time.Now()) {
-			// TODO: convert to soft delete and update status to expired
-			dbClient.Share.DeleteOne(shareObj).Exec(context.Background())
+			err = dbClient.Share.Update().Where(share.ID(shareObj.ID)).SetStatus(model.ShareStatusExpired).Exec(context.Background())
+			if err != nil {
+				return sendInternalServerErrorResponse(c, err)
+			}
+
 			return sendNotFoundResponse(c, nil)
+		}
+
+		err = dbClient.Share.Update().Where(share.ID(shareObj.ID)).SetStatus(model.ShareStatusAccessed).Exec(context.Background())
+		if err != nil {
+			return sendInternalServerErrorResponse(c, err)
 		}
 
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{

@@ -28,7 +28,9 @@ type Share struct {
 	// Data holds the value of the "data" field.
 	Data []map[string]interface{} `json:"data,omitempty"`
 	// CreatorID holds the value of the "creator_id" field.
-	CreatorID    uuid.UUID `json:"creator_id,omitempty"`
+	CreatorID uuid.UUID `json:"creator_id,omitempty"`
+	// Status holds the value of the "status" field.
+	Status       string `json:"status,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -39,7 +41,7 @@ func (*Share) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case share.FieldData:
 			values[i] = new([]byte)
-		case share.FieldShareCode:
+		case share.FieldShareCode, share.FieldStatus:
 			values[i] = new(sql.NullString)
 		case share.FieldCreatedAt, share.FieldExpiration:
 			values[i] = new(sql.NullTime)
@@ -98,6 +100,12 @@ func (s *Share) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				s.CreatorID = *value
 			}
+		case share.FieldStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				s.Status = value.String
+			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
 		}
@@ -148,6 +156,9 @@ func (s *Share) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("creator_id=")
 	builder.WriteString(fmt.Sprintf("%v", s.CreatorID))
+	builder.WriteString(", ")
+	builder.WriteString("status=")
+	builder.WriteString(s.Status)
 	builder.WriteByte(')')
 	return builder.String()
 }

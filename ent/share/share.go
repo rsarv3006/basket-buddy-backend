@@ -24,6 +24,8 @@ const (
 	FieldData = "data"
 	// FieldCreatorID holds the string denoting the creator_id field in the database.
 	FieldCreatorID = "creator_id"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
 	// Table holds the table name of the share in the database.
 	Table = "shares"
 )
@@ -36,6 +38,7 @@ var Columns = []string{
 	FieldShareCode,
 	FieldData,
 	FieldCreatorID,
+	FieldStatus,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -53,6 +56,8 @@ var (
 	DefaultCreatedAt func() time.Time
 	// DefaultExpiration holds the default value on creation for the "expiration" field.
 	DefaultExpiration time.Time
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus string
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -83,4 +88,9 @@ func ByShareCode(opts ...sql.OrderTermOption) OrderOption {
 // ByCreatorID orders the results by the creator_id field.
 func ByCreatorID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatorID, opts...).ToFunc()
+}
+
+// ByStatus orders the results by the status field.
+func ByStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }

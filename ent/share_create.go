@@ -67,6 +67,20 @@ func (sc *ShareCreate) SetCreatorID(u uuid.UUID) *ShareCreate {
 	return sc
 }
 
+// SetStatus sets the "status" field.
+func (sc *ShareCreate) SetStatus(s string) *ShareCreate {
+	sc.mutation.SetStatus(s)
+	return sc
+}
+
+// SetNillableStatus sets the "status" field if the given value is not nil.
+func (sc *ShareCreate) SetNillableStatus(s *string) *ShareCreate {
+	if s != nil {
+		sc.SetStatus(*s)
+	}
+	return sc
+}
+
 // SetID sets the "id" field.
 func (sc *ShareCreate) SetID(u uuid.UUID) *ShareCreate {
 	sc.mutation.SetID(u)
@@ -124,6 +138,10 @@ func (sc *ShareCreate) defaults() {
 		v := share.DefaultExpiration
 		sc.mutation.SetExpiration(v)
 	}
+	if _, ok := sc.mutation.Status(); !ok {
+		v := share.DefaultStatus
+		sc.mutation.SetStatus(v)
+	}
 	if _, ok := sc.mutation.ID(); !ok {
 		v := share.DefaultID()
 		sc.mutation.SetID(v)
@@ -146,6 +164,9 @@ func (sc *ShareCreate) check() error {
 	}
 	if _, ok := sc.mutation.CreatorID(); !ok {
 		return &ValidationError{Name: "creator_id", err: errors.New(`ent: missing required field "Share.creator_id"`)}
+	}
+	if _, ok := sc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Share.status"`)}
 	}
 	return nil
 }
@@ -201,6 +222,10 @@ func (sc *ShareCreate) createSpec() (*Share, *sqlgraph.CreateSpec) {
 	if value, ok := sc.mutation.CreatorID(); ok {
 		_spec.SetField(share.FieldCreatorID, field.TypeUUID, value)
 		_node.CreatorID = value
+	}
+	if value, ok := sc.mutation.Status(); ok {
+		_spec.SetField(share.FieldStatus, field.TypeString, value)
+		_node.Status = value
 	}
 	return _node, _spec
 }
