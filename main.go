@@ -1,7 +1,7 @@
 package main
 
 import (
-	"basket-buddy-backend/alerts"
+	"basket-buddy-backend/alert"
 	"basket-buddy-backend/config"
 	"basket-buddy-backend/database"
 	"basket-buddy-backend/router"
@@ -41,7 +41,7 @@ func main() {
 	app.Use(helmet.New())
 	app.Use(recover.New())
 
-	apiAlertsClient := alerts.Connect()
+	apiAlertsClient := alert.Connect()
 
 	log.Println("Setting context")
 	app.Use(func(c *fiber.Ctx) error {

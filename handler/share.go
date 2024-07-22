@@ -4,7 +4,7 @@ import (
 	"basket-buddy-backend/dto"
 	"basket-buddy-backend/ent"
 	"basket-buddy-backend/ent/share"
-	"basket-buddy-backend/helpers"
+	"basket-buddy-backend/helper"
 	"basket-buddy-backend/model"
 	"context"
 	"errors"
@@ -51,7 +51,7 @@ func CreateShareEndpoint(dbClient *ent.Client) fiber.Handler {
 }
 
 func createShareCode(dbClent *ent.Client) (string, error) {
-	shareCode := helpers.GenerateShareCode()
+	shareCode := helper.GenerateShareCode()
 
 	foundShare, err := dbClent.Share.Query().Where(share.ShareCode(shareCode)).Exist(context.Background())
 

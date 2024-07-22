@@ -1,4 +1,4 @@
-package alerts
+package alert
 
 import (
 	"basket-buddy-backend/config"
