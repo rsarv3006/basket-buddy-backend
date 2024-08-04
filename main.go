@@ -25,13 +25,7 @@ func main() {
 	})
 
 	client := database.Connect()
-	token, err := database.CreateAnonUser(client)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("Created anon user with token: " + token)
+	go database.CreateAnonUser(client)
 
 	if env != "production" {
 		log.Println("Enabling pprof...")
@@ -63,7 +57,7 @@ func main() {
 	log.Println("Routes setup.")
 
 	log.Println("Listening on port 3000")
-	err = app.Listen(":3000")
+	err := app.Listen(":3000")
 
 	if err != nil {
 		log.Fatal(err)

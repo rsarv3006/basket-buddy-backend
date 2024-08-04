@@ -6,20 +6,22 @@ import (
 	"basket-buddy-backend/ent"
 	"basket-buddy-backend/ent/appuser"
 	"context"
+	"log"
 )
 
-func CreateAnonUser(dbClient *ent.Client) (string, error) {
+func CreateAnonUser(dbClient *ent.Client) {
 	doesUserExist, err := dbClient.AppUser.
 		Query().
 		Where(appuser.Role("anon")).
 		Exist(context.Background())
 
 	if err != nil {
-		return "", err
+		log.Fatal(err)
 	}
 
 	if doesUserExist {
-		return "", nil
+		log.Println("Anon user already exists")
+		return
 	}
 
 	anonUser, err := dbClient.AppUser.
@@ -31,12 +33,15 @@ func CreateAnonUser(dbClient *ent.Client) (string, error) {
 		Save(context.Background())
 
 	if err != nil {
-		return "", err
+		log.Fatal(err)
 	}
 
 	jwtSecretString := config.Config("JWT_SECRET")
 	token, err := auth.GenerateJWTFromSecret(anonUser, jwtSecretString, auth.FiftyYears)
 
-	return token, err
+	log.Println("Created anon user with token: " + token)
 
+	if err != nil {
+		log.Fatal(err)
+	}
 }
