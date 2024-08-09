@@ -11,10 +11,11 @@ import (
 )
 
 func SetupRoutes(app *fiber.App, dbClient *ent.Client) {
-	api := app.Group("/api", logger.New())
-
-	setUpShareRoutes(api, dbClient)
 	setUpWellKnownRoutes(app)
+	setUpShareRedirectRoutes(app)
+
+	api := app.Group("/api", logger.New())
+	setUpShareRoutes(api, dbClient)
 	api.Get("/health", handler.HealthEndpoint())
 
 }
@@ -38,5 +39,11 @@ func setUpWellKnownRoutes(app *fiber.App) {
 		}
 
 		return c.Send(content)
+	})
+}
+
+func setUpShareRedirectRoutes(app *fiber.App) {
+	app.Get("/share/:ShareCode", func(c *fiber.Ctx) error {
+		return c.Redirect("https://apps.apple.com/us/app/basketbuddy/id6446040498")
 	})
 }
