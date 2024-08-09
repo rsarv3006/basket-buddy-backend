@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "id6446040498"
+        ],
+        "components": [
+          {
+            "/": "/share",
+            "?": {
+              "shareCodeId": "*"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
