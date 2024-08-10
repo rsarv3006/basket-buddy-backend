@@ -43,7 +43,7 @@ func setUpWellKnownRoutes(app *fiber.App) {
 }
 
 func setUpShareRedirectRoutes(app *fiber.App) {
-	app.Get("/share/:ShareCode", func(c *fiber.Ctx) error {
+	app.Get("/share", func(c *fiber.Ctx) error {
 		return c.Redirect("https://apps.apple.com/us/app/basketbuddy/id6446040498")
 	})
 }
