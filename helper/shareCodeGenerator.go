@@ -5,7 +5,7 @@ import (
 	"math/big"
 )
 
-const shareCodeChars = "ABCDEFGHJKMNPQRSTUVXYZ23456789"
+const shareCodeChars = "ABCDEFGHJKMNPQRSTUVXYZ"
 const shareCodeCharsLen = int64(len(shareCodeChars))
 
 func GenerateShareCode() string {
