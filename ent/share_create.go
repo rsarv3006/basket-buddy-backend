@@ -41,14 +41,6 @@ func (sc *ShareCreate) SetExpiration(t time.Time) *ShareCreate {
 	return sc
 }
 
-// SetNillableExpiration sets the "expiration" field if the given value is not nil.
-func (sc *ShareCreate) SetNillableExpiration(t *time.Time) *ShareCreate {
-	if t != nil {
-		sc.SetExpiration(*t)
-	}
-	return sc
-}
-
 // SetShareCode sets the "share_code" field.
 func (sc *ShareCreate) SetShareCode(s string) *ShareCreate {
 	sc.mutation.SetShareCode(s)
@@ -133,10 +125,6 @@ func (sc *ShareCreate) defaults() {
 	if _, ok := sc.mutation.CreatedAt(); !ok {
 		v := share.DefaultCreatedAt()
 		sc.mutation.SetCreatedAt(v)
-	}
-	if _, ok := sc.mutation.Expiration(); !ok {
-		v := share.DefaultExpiration
-		sc.mutation.SetExpiration(v)
 	}
 	if _, ok := sc.mutation.Status(); !ok {
 		v := share.DefaultStatus

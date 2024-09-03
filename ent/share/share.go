@@ -54,8 +54,6 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
-	// DefaultExpiration holds the default value on creation for the "expiration" field.
-	DefaultExpiration time.Time
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// DefaultID holds the default value on creation for the "id" field.

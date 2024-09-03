@@ -35,6 +35,7 @@ func CreateShareEndpoint(dbClient *ent.Client) fiber.Handler {
 
 		shareObj, err := dbClient.Share.Create().
 			SetData(shareCreateDto.Data).
+			SetExpiration(time.Now().Add(time.Hour * 24 * 7)).
 			SetCreatorID(currentUser.ID).
 			SetShareCode(shareCode).
 			Save(context.Background())
@@ -53,7 +54,11 @@ func CreateShareEndpoint(dbClient *ent.Client) fiber.Handler {
 func createShareCode(dbClent *ent.Client) (string, error) {
 	shareCode := helper.GenerateShareCode()
 
-	foundShare, err := dbClent.Share.Query().Where(share.ShareCode(shareCode)).Exist(context.Background())
+	foundShare, err := dbClent.
+		Share.
+		Query().
+		Where(share.ShareCode(shareCode)).
+		Exist(context.Background())
 
 	if err != nil {
 		return "", err

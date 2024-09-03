@@ -21,8 +21,7 @@ func (Share) Fields() []ent.Field {
 			Default(uuid.New),
 		field.Time("created_at").
 			Default(time.Now),
-		field.Time("expiration").
-			Default(time.Now().Add(15 * time.Minute)),
+		field.Time("expiration"),
 		field.String("share_code").
 			Unique(),
 		field.JSON("data", []map[string]interface{}(nil)),
