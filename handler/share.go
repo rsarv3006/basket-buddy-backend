@@ -2,20 +2,23 @@ package handler
 
 import (
 	"basket-buddy-backend/dto"
-	"basket-buddy-backend/ent"
-	"basket-buddy-backend/ent/share"
 	"basket-buddy-backend/helper"
 	"basket-buddy-backend/model"
 	"context"
 	"errors"
+	"log"
 	"time"
+
+	"cloud.google.com/go/firestore"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func CreateShareEndpoint(dbClient *ent.Client) fiber.Handler {
+var BasketBuddyShareCollectionName = "BasketBuddy-Share"
+
+func CreateShareEndpoint(client *firestore.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		currentUser := c.Locals("currentUser").(*ent.AppUser)
+		currentUser := c.Locals("currentUser").(map[string]interface{})
 
 		shareCreateDto := new(dto.CreateShareDto)
 
@@ -27,51 +30,48 @@ func CreateShareEndpoint(dbClient *ent.Client) fiber.Handler {
 			return sendBadRequestResponse(c, nil, "share data not defined")
 		}
 
-		shareCode, err := createShareCode(dbClient)
-
+		shareCode, err := createShareCode(client)
 		if err != nil {
 			return sendInternalServerErrorResponse(c, err)
 		}
 
-		shareObj, err := dbClient.Share.Create().
-			SetData(shareCreateDto.Data).
-			SetExpiration(time.Now().Add(time.Hour * 24 * 7)).
-			SetCreatorID(currentUser.ID).
-			SetShareCode(shareCode).
-			Save(context.Background())
-
-		if err != nil {
+		shareObj := map[string]interface{}{
+			"data":       shareCreateDto.Data,
+			"expiration": time.Now().Add(time.Hour * 24 * 7),
+			"creator_id": currentUser["id"],
+			"share_code": shareCode,
+			"status":     model.ShareStatusCreated,
+			"created_at": firestore.ServerTimestamp,
+		}
+		docRef, _, err := client.Collection(BasketBuddyShareCollectionName).Add(context.Background(), shareObj)
+		if err != nil && err.Error() != "no more items in iterator" {
+			log.Println(err)
 			return sendInternalServerErrorResponse(c, err)
 		}
 
 		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 			"message":   "Share created successfully",
-			"shareCode": shareObj.ShareCode,
+			"shareCode": shareCode,
+			"id":        docRef.ID,
 		})
 	}
 }
 
-func createShareCode(dbClent *ent.Client) (string, error) {
+func createShareCode(client *firestore.Client) (string, error) {
+	ctx := context.Background()
 	shareCode := helper.GenerateShareCode()
-
-	foundShare, err := dbClent.
-		Share.
-		Query().
-		Where(share.ShareCode(shareCode)).
-		Exist(context.Background())
-
-	if err != nil {
-		return "", err
-	}
-
-	if foundShare {
+	iter := client.Collection(BasketBuddyShareCollectionName).Where("share_code", "==", shareCode).Documents(ctx)
+	doc, err := iter.Next()
+	if err == nil && doc.Exists() {
 		return "", errors.New("Share code already exists")
 	}
-
+	if err != nil && err.Error() != "no more items in iterator" {
+		return "", err
+	}
 	return shareCode, nil
 }
 
-func FetchShareEndpoint(dbClient *ent.Client) fiber.Handler {
+func FetchShareEndpoint(client *firestore.Client) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		shareCode := c.Params("ShareCode")
 
@@ -79,38 +79,34 @@ func FetchShareEndpoint(dbClient *ent.Client) fiber.Handler {
 			return sendBadRequestResponse(c, nil, "Share code not defined")
 		}
 
-		shareObj, err := dbClient.Share.Query().Where(
-			share.And(
-				share.ShareCode(shareCode),
-				share.Status(model.ShareStatusCreated),
-			),
-		).First(context.Background())
-
-		if err != nil {
-			if ent.IsNotFound(err) {
-				return sendNotFoundResponse(c, err)
-			}
-			return sendInternalServerErrorResponse(c, err)
+		ctx := context.Background()
+		iter := client.Collection(BasketBuddyShareCollectionName).Where("share_code", "==", shareCode).Where("status", "==", model.ShareStatusCreated).Documents(ctx)
+		doc, err := iter.Next()
+		if err != nil || !doc.Exists() {
+			return sendNotFoundResponse(c, err)
 		}
 
-		if shareObj.Expiration.Before(time.Now()) {
-			err = dbClient.Share.Update().Where(share.ID(shareObj.ID)).SetStatus(model.ShareStatusExpired).Exec(context.Background())
+		shareObj := doc.Data()
+		expiration, ok := shareObj["expiration"].(time.Time)
+		if !ok || expiration.Before(time.Now()) {
+			// Mark as expired
+			_, err := doc.Ref.Update(ctx, []firestore.Update{{Path: "status", Value: model.ShareStatusExpired}})
 			if err != nil {
 				return sendInternalServerErrorResponse(c, err)
 			}
-
 			return sendNotFoundResponse(c, nil)
 		}
 
-		err = dbClient.Share.Update().Where(share.ID(shareObj.ID)).SetStatus(model.ShareStatusAccessed).Exec(context.Background())
+		// Mark as accessed
+		_, err = doc.Ref.Update(ctx, []firestore.Update{{Path: "status", Value: model.ShareStatusAccessed}})
 		if err != nil {
 			return sendInternalServerErrorResponse(c, err)
 		}
 
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"message":   "Share fetched successfully",
-			"shareCode": shareObj.ShareCode,
-			"data":      shareObj.Data,
+			"shareCode": shareObj["share_code"],
+			"data":      shareObj["data"],
 		})
 	}
 }

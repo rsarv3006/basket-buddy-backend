@@ -4,13 +4,12 @@ import (
 	"errors"
 	"time"
 
-	"basket-buddy-backend/ent"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt"
 )
 
 type JWTClaims struct {
-	AppUser *ent.AppUser
+	AppUser map[string]interface{}
 	jwt.StandardClaims
 }
 
@@ -22,20 +21,18 @@ var (
 	ErrInvalid = errors.New("couldn't parse claims")
 )
 
-func GenerateJWT(user *ent.AppUser, ctx *fiber.Ctx, tokenDuration time.Duration) (string, error) {
+func GenerateJWT(user map[string]interface{}, ctx *fiber.Ctx, tokenDuration time.Duration) (string, error) {
 	jwtSecretString := ctx.Locals("JwtSecret").(string)
 	return generateToken(user, jwtSecretString, tokenDuration)
 }
 
-func GenerateJWTFromSecret(user *ent.AppUser, jwtSecretString string, tokenDuration time.Duration) (string, error) {
+func GenerateJWTFromSecret(user map[string]interface{}, jwtSecretString string, tokenDuration time.Duration) (string, error) {
 	return generateToken(user, jwtSecretString, tokenDuration)
 }
 
-func generateToken(user *ent.AppUser, jwtSecretString string, tokenDuration time.Duration) (string, error) {
+func generateToken(user map[string]interface{}, jwtSecretString string, tokenDuration time.Duration) (string, error) {
 	jwtKey := []byte(jwtSecretString)
-
 	expirationTime := time.Now().Add(tokenDuration)
-
 	claims := &JWTClaims{
 		AppUser: user,
 		StandardClaims: jwt.StandardClaims{
@@ -47,10 +44,9 @@ func generateToken(user *ent.AppUser, jwtSecretString string, tokenDuration time
 	return tokenString, err
 }
 
-func ValidateToken(signedToken string, ctx *fiber.Ctx) (*ent.AppUser, error) {
+func ValidateToken(signedToken string, ctx *fiber.Ctx) (map[string]interface{}, error) {
 	jwtSecretString := ctx.Locals("JwtSecret").(string)
 	jwtKey := []byte(jwtSecretString)
-
 	token, err := jwt.ParseWithClaims(
 		signedToken,
 		&JWTClaims{},
@@ -58,7 +54,6 @@ func ValidateToken(signedToken string, ctx *fiber.Ctx) (*ent.AppUser, error) {
 			return []byte(jwtKey), nil
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -71,3 +66,4 @@ func ValidateToken(signedToken string, ctx *fiber.Ctx) (*ent.AppUser, error) {
 	}
 	return claims.AppUser, nil
 }
+

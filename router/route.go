@@ -1,31 +1,31 @@
 package router
 
 import (
-	"basket-buddy-backend/ent"
 	"basket-buddy-backend/handler"
 	"basket-buddy-backend/middleware"
 	"os"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-func SetupRoutes(app *fiber.App, dbClient *ent.Client) {
+func SetupRoutes(app *fiber.App, client *firestore.Client) {
 	setUpWellKnownRoutes(app)
 	setUpShareRedirectRoutes(app)
 
 	api := app.Group("/api", logger.New())
-	setUpShareRoutes(api, dbClient)
+	setUpShareRoutes(api, client)
 	api.Get("/health", handler.HealthEndpoint())
 
 }
 
-func setUpShareRoutes(api fiber.Router, dbClient *ent.Client) {
+func setUpShareRoutes(api fiber.Router, client *firestore.Client) {
 	config := api.Group("/v1/share")
 	config.Use(middleware.IsExpired())
 
-	config.Post("/", handler.CreateShareEndpoint(dbClient))
-	config.Get("/:ShareCode", handler.FetchShareEndpoint(dbClient))
+	config.Post("/", handler.CreateShareEndpoint(client))
+	config.Get("/:ShareCode", handler.FetchShareEndpoint(client))
 }
 
 func setUpWellKnownRoutes(app *fiber.App) {
